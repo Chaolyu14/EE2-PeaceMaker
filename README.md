@@ -1,2 +1,6 @@
 # Project-PeaceMaker
-Year 2 project EEE
+EE2 year project peacemaker aims at creating a zone
+in which you can choose not to hear the incoming noises 
+
+Based on adaptive filtering/ANC
+
