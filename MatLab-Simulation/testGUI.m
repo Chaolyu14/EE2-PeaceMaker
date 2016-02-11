@@ -103,6 +103,23 @@ function Start_Recording_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Record your voice for 5 seconds.
+
+Microphone = dsp.AudioRecorder;
+Speaker = dsp.AudioPlayer;
+SpecAnalyzer = dsp.SpectrumAnalyzer;
+
+tic;
+
+while(toc<30)
+    audio = step(Microphone);
+            step(SpecAnalyzer,audio);
+            step(Speaker,audio);
+    
+end
+
+release (Microphone);
+release (SpecAnalyzer);
+
 hObject = audiorecorder;
 disp('Start speaking.')
 record(hObject);
