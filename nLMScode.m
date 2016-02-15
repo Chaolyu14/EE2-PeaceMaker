@@ -3,9 +3,8 @@ lms2 = dsp.LMSFilter('Length',11, ...
    'AdaptInputPort',true, ...
    'StepSizeSource','Input port', ...
    'WeightsOutputPort',false);
-filt2 = dsp.FIRFilter('Numerator', fir1(10,[.5, .75]));
-x = ; % Fill with input signal
+x = 0; % Fill with input signal
 d = 0; % d to 0 tentatively
 a = 1; % adaptation control
 mu = 0.05; % step size
-[y, err] = step(lms2,x,d,mu,a);
+[y, err] = step(lms2,x,d,mu,a)
