@@ -62,7 +62,10 @@ handles.output = hObject;
  % assign a timer function to the recorder
  set(handles.recorder,'TimerPeriod',1,'TimerFcn',{@audioTimer,hObject});
  % save the handles structure
-
+set(handles.periodsldr,'Min',0.01,'Max',2)
+set(handles.periodsldr,'Value',get(handles.timer('Period'));
+set(handles.slidervalue,'String',...
+    num2str(get(handles.periodsldr,'Value')))
 % Update handles structure
 guidata(hObject, handles);
 
@@ -89,7 +92,6 @@ function Start_Recording_Callback(hObject, eventdata, handles)
 % handles = guidata(hObject);
 disp('start recording');
 record(handles.recorder);
-
 guidata(hObject,handles);
 
 % Hint: get(hObject,'Value') returns toggle state of Start_Recording
@@ -127,7 +129,7 @@ function Playback_Callback(hObject, eventdata, handles)
 
 
 
-function audioTimer(hObject,varargin)
+function audioTimer(hObject,varargin,samples)
 % get the handle to the figure/GUI  (this is the handle we passed in 
  % when creating the timer function in myGuiName_OpeningFcn)
  hFigure = varargin{2};
