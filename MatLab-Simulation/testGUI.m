@@ -78,7 +78,7 @@ function varargout = testGUI_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} = handles.output;
+varargout{2} = handles.output;
 
 
 
@@ -113,6 +113,7 @@ function Start_Recording_Callback(hObject, eventdata, handles)
 % handles = guidata(hObject);
 disp('start recording');
 record(handles.recorder);
+
 guidata(hObject,handles);
 
 % Hint: get(hObject,'Value') returns toggle state of Start_Recording
@@ -123,11 +124,11 @@ function Finish_Recording_Callback(hObject, eventdata, handles)
 % hObject    handle to Finish_Recording (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-stop(handles.recorder);
  % save the recorder to file
- recorder = handles.recorder
- filename = [datestr(now,'yyyy-mm-dd_HHMMSS') '.mat'];
- save(filename,'recorder');
+recorder = handles.recorder
+filename = [datestr(now,'yyyy-mm-dd_HHMMSS') '.wav'];
+save(filename,'recorder');
+stop(handles.recorder);
 
 disp('End of Recording.');
 
@@ -179,7 +180,7 @@ function audioTimer(hObject,varargin)
  % get the handles structure so we can access the plots/axes
  handles = guidata(hFigure);
  % get the audio samples
- samples  = getaudiodata(hObject);
 
+ guidata(hFigure,handles);
  % etc.
 
