@@ -125,13 +125,13 @@ function Finish_Recording_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
  % save the recorder to file
-recorder = handles.recorder;
-stop(handles.recorder);
+recorder = handles.recorder
 filename = [datestr(now,'yyyy-mm-dd_HHMMSS') '.wav'];
-save(filename,'recorder');
+audiowrite(filename,'recorder');
+stop(handles.recorder);
 
 disp('End of Recording.');
-guidata(hObject,handles);
+
 
 % --- Executes on button press in Filtering.
 function Filtering_Callback(hObject, eventdata, handles)
@@ -174,11 +174,13 @@ end
 
 
 function audioTimer(hObject,varargin)
-% get the handle to the figure/GUI  (this is the handle we passed in 
+ % get the handle to the figure/GUI  (this is the handle we passed in 
  % when creating the timer function in myGuiName_OpeningFcn)
  hFigure = varargin{2};
  % get the handles structure so we can access the plots/axes
  handles = guidata(hFigure);
  % get the audio samples
- samples  = getaudiodata(hObject);
+
+ guidata(hFigure,handles);
+ % etc.
 

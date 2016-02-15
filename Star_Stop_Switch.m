@@ -89,7 +89,8 @@ function Stop_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 stop(handles.recorder);
 recorder = handles.recorder;
-audiowrite(;
+filename = [datestr(now,'yyyy-mm-dd_HHMMSS') '.wav'];
+audiowrite(filename);
 
 function audioTimer(hObject,varargin)
 % get the handle to the figure/GUI  (this is the handle we passed in 
