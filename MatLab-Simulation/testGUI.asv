@@ -124,10 +124,9 @@ function Finish_Recording_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 stop(handles.recorder);
- % save the recorder to file
- recorder = handles.recorder
- filename = [datestr(now,'yyyy-mm-dd_HHMMSS') '.mat'];
- save(filename,'recorder');
+recorder = handles.recorder;
+filename = [datestr(now,'yyyy-mm-dd_HHMMSS') '.mat'];
+save(filename,'recorder');
 
 disp('End of Recording.');
 
@@ -137,7 +136,7 @@ function Filtering_Callback(hObject, eventdata, handles)
 % hObject    handle to Filtering (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+end
 
 
 
@@ -146,6 +145,7 @@ function Playback_Callback(hObject, eventdata, handles)
 % hObject    handle to Playback (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+play(myVoice);
 
 
 
@@ -181,5 +181,8 @@ function audioTimer(hObject,varargin)
  % get the audio samples
  samples  = getaudiodata(hObject);
 
- % etc.
 
+
+
+
+end
