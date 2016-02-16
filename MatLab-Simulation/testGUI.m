@@ -31,7 +31,7 @@ gui_State = struct('gui_Name',       mfilename, ...
                    'gui_OpeningFcn', @testGUI_OpeningFcn, ...
                    'gui_OutputFcn',  @testGUI_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+                     'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -61,13 +61,16 @@ handles.output = hObject;
  handles.AR = dsp.AudioRecorder('SampleRate',44100,...
                        'SamplesPerFrame',1024);
  handles.Fs = handles.AR.SampleRate;
+
  handles.AP = dsp.AudioPlayer('SampleRate',handles.Fs,...
     'OutputNumUnderrunSamples',true);
 % assign a timer function to the recorder
 % set(handles.recorder,'TimerPeriod',1,'TimerFcn',{@audioTimer,hObject});
+ handles.TS = dsp.TimeScope();
 
  % save the handles structure
-  handles.filename = [datestr(now,'yyyy-mm-dd_HHMMSS') '.WAV'];
+  handles.filename = [datestr(now,'yyyy-mm-dd_HHMMSS') '.wav'];
+  handles.AFW = dsp.AudioFileWriter(handles.filename,'FileFormat', 'WAV');
 % Update handles structure
 guidata(hObject, handles);
 
@@ -83,7 +86,7 @@ function varargout = testGUI_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{2} = handles.output;
+varargout{1} = handles.output;
 
 
 % --- Executes on button press in Start_Recording.
@@ -92,17 +95,22 @@ function Start_Recording_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
-disp('start recording');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Streaming %
 tic
 Tstop  = inf;
 count = 0;
 axes(handles.axes1); 
+
+disp('Start recording');
+disp('Speak into microphone now');
 while toc < Tstop
-    audioIn = step(handles.AR); 
-    plot(audioIn)
-    drawnow	
+    audioIn = step(handles.AR);
+              step(handles.TS, audioIn);
+              step(handles.AFW,audioIn);
+    plot(audioIn);
+    axis([0 1024 -0.5 0.5]);
+    drawnow
     count = count + 1;
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -116,7 +124,8 @@ function Finish_Recording_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
  % save the recorder to file
-
+release(handles.AR);
+release(handles.AFW);
 disp('End of Recording.');
 
 
@@ -136,13 +145,13 @@ BW = Wo/Q;
 NotchFilter = dsp.BiquadFilter('SOSMatrix',[b,a]);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Streaming %
-TS = dsp.TimeScope('YLimits',[-1,1],'SampleRate',Fs,...
-    'TimeSpan',FrameSize/Fs);
+TS = dsp.TimeScope('YLimits',[-0.1,0.1],'SampleRate',handles.Fs,...
+    'TimeSpan',44100/1024);
 Tstop = inf;
 tic
 count = 0;
 while toc < Tstop % Run for 20 seconds
-    audioIn = step(AR);
+    audioIn = step(handles.AR);
     audioOut = step(NotchFilter,audioIn);
     step(TS,audioOut);
     count = count + 1;
@@ -156,10 +165,18 @@ function Playback_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
 %[y,Fs] = audioread(handles.filename);
-RawData = getaudiodata(handles.recorder);
-axes(handles.axes1) 
-plot(RawData);
-play('handles.filename');
+while ~isDone(handles.AFR)
+  audio = step(handles.AFR);
+  nUnderrun = step(handles.AP,audio);
+  if nUnderrun > 0
+    fprintf('Audio player queue underrun by %d samples.\n'...
+	     ,nUnderrun);
+  end
+end
+pause(handles.AP.QueueDuration); % wait until audio is played to the end
+release(handles.AFR);            % close the input file
+release(handles.AP);             % close the audio output device
+
 disp('sound played');
 
 
@@ -175,3 +192,11 @@ function audioTimer(hObject,varargin)
 hfig = figure;
 figname = hfig.Name;
 hfig.Name = 'My Window';
+
+function NotchFilter
+% Notch Filter %
+Wo = 200/(handles.Fs/2);
+Q  = 35;
+BW = Wo/Q;
+[b,a] = iirnotch(Wo,BW);
+NotchFilter = dsp.BiquadFilter('SOSMatrix',[b,a]);
