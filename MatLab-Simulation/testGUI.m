@@ -56,16 +56,18 @@ function testGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
  % set the sample rate (Hz)
- handles.Fs       = 8192;
- handles.y        = zeros(1024, 1, 'double');
- % create the recorder
- handles.player = audioplayer(handles.y, handles.Fs);   
- handles.recorder = audiorecorder(handles.Fs,16,1); % audiorecorder(Fs,nBits,nChannels) 
- % assign a timer function to the recorder
+
+ % create the recorder 
+ handles.AR = dsp.AudioRecorder('SampleRate',44100,...
+                       'SamplesPerFrame',1024);
+ handles.Fs = handles.AR.SampleRate;
+ handles.AP = dsp.AudioPlayer('SampleRate',handles.Fs,...
+    'OutputNumUnderrunSamples',true);
+% assign a timer function to the recorder
 % set(handles.recorder,'TimerPeriod',1,'TimerFcn',{@audioTimer,hObject});
 
  % save the handles structure
-  handles.filename = [datestr(now,'yyyy-mm-dd_HHMMSS') '.wav'];
+  handles.filename = [datestr(now,'yyyy-mm-dd_HHMMSS') '.WAV'];
 % Update handles structure
 guidata(hObject, handles);
 
@@ -91,9 +93,19 @@ function Start_Recording_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
 disp('start recording');
-record(handles.recorder,5);
-guidata(hObject,handles);
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Streaming %
+tic
+Tstop  = inf;
+count = 0;
+axes(handles.axes1); 
+while toc < Tstop
+    audioIn = step(handles.AR); 
+    plot(audioIn)
+    drawnow	
+    count = count + 1;
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Hint: get(hObject,'Value') returns toggle state of Start_Recording
 
@@ -104,25 +116,38 @@ function Finish_Recording_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
  % save the recorder to file
-handles = guidata(hObject);
+
 disp('End of Recording.');
-stop(handles.recorder);
-audiowrite(handles.filename,handles.y,handles.Fs);
-% audiowrite(filename,y,Fs)
+
+
 info = audioinfo(handles.filename);
 disp(info);
-
-
-
 
 % --- Executes on button press in Filtering.
 function Filtering_Callback(hObject, eventdata, handles)
 % hObject    handle to Filtering (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-
-
+% Notch Filter %
+Wo = 200/(handles.Fs/2);
+Q  = 35;
+BW = Wo/Q;
+[b,a] = iirnotch(Wo,BW);
+NotchFilter = dsp.BiquadFilter('SOSMatrix',[b,a]);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Streaming %
+TS = dsp.TimeScope('YLimits',[-1,1],'SampleRate',Fs,...
+    'TimeSpan',FrameSize/Fs);
+Tstop = inf;
+tic
+count = 0;
+while toc < Tstop % Run for 20 seconds
+    audioIn = step(AR);
+    audioOut = step(NotchFilter,audioIn);
+    step(TS,audioOut);
+    count = count + 1;
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % --- Executes on button press in Playback.
 function Playback_Callback(hObject, eventdata, handles)
@@ -130,11 +155,12 @@ function Playback_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
-[y,Fs] = audioread(handles.filename);
-sound(y,Fs);
-
+%[y,Fs] = audioread(handles.filename);
+RawData = getaudiodata(handles.recorder);
+axes(handles.axes1) 
+plot(RawData);
+play('handles.filename');
 disp('sound played');
-
 
 
 function audioTimer(hObject,varargin)
@@ -145,3 +171,7 @@ function audioTimer(hObject,varargin)
  handles = guidata(hFigure);
  % get the audio samples
  samples = getaudiodata(hObject);
+
+hfig = figure;
+figname = hfig.Name;
+hfig.Name = 'My Window';
