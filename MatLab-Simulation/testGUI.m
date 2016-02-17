@@ -70,6 +70,7 @@ handles.output = hObject;
 
  % save the handles structure
   handles.filename = [datestr(now,'yyyy-mm-dd_HHMMSS') '.wav'];
+  handles.AFR = dsp.AudioFileReader;
   handles.AFW = dsp.AudioFileWriter(handles.filename,'FileFormat', 'WAV');
 % Update handles structure
 guidata(hObject, handles);
@@ -106,7 +107,7 @@ disp('Start recording');
 disp('Speak into microphone now');
 while toc < Tstop
     audioIn = step(handles.AR);
-              step(handles.TS, audioIn);
+              %step(handles.TS, audioIn);
               step(handles.AFW,audioIn);
     plot(audioIn);
     axis([0 1024 -0.5 0.5]);
@@ -130,6 +131,7 @@ disp('End of Recording.');
 
 
 info = audioinfo(handles.filename);
+
 disp(info);
 
 % --- Executes on button press in Filtering.
@@ -165,7 +167,7 @@ function Playback_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
 %[y,Fs] = audioread(handles.filename);
-while ~isDone(handles.AFR)
+while ~isDone(handles.AFR(handles.filename))
   audio = step(handles.AFR);
   nUnderrun = step(handles.AP,audio);
   if nUnderrun > 0
