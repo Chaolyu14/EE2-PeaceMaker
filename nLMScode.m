@@ -3,8 +3,11 @@ lms2 = dsp.LMSFilter('Length',11, ...
    'AdaptInputPort',true, ...
    'StepSizeSource','Input port', ...
    'WeightsOutputPort',false);
-x = 0; % Fill with input signal
-d = 0; % d to 0 tentatively
+x = rand(1:100); % Fill with input signal
+x = x'; % x has to be a column vector
+d = x; % d to 0 tentatively
 a = 1; % adaptation control
-mu = 0.05; % step size
-[y, err] = step(lms2,x,d,mu,a)
+mu = 0.01; % step size
+[y, err] = step(lms2,x,d,mu,a);
+subplot(2,1,1),plot(y),title('y');
+subplot(2,1,2),plot(err), title('err'); 

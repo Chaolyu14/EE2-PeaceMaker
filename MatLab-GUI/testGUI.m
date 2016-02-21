@@ -66,7 +66,6 @@ handles.output = hObject;
     'OutputNumUnderrunSamples',true);
 % assign a timer function to the recorder
 % set(handles.recorder,'TimerPeriod',1,'TimerFcn',{@audioTimer,hObject});
- handles.TS = dsp.TimeScope();
 
  % save the handles structure
   handles.filename = [datestr(now,'yyyy-mm-dd_HHMMSS') '.wav'];
@@ -107,13 +106,14 @@ disp('Start recording');
 disp('Speak into microphone now');
 while toc < Tstop
     audioIn = step(handles.AR);
-              %step(handles.TS, audioIn);
               step(handles.AFW,audioIn);
     plot(audioIn);
     axis([0 1024 -0.5 0.5]);
     drawnow
     count = count + 1;
 end
+dsp.FIRDecimator; % decimate by 2
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Hint: get(hObject,'Value') returns toggle state of Start_Recording
@@ -131,7 +131,6 @@ disp('End of Recording.');
 
 
 info = audioinfo(handles.filename);
-
 disp(info);
 
 % --- Executes on button press in Filtering.
@@ -150,8 +149,18 @@ d = x;         % Set desired to x
 a = 1; % adaptation control, 1 to on filter 0 to off
 mu = 0.01; % step size
 
-% put in while loop
-[y, err] = step(nlms,x,d,mu,a);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Streaming %
+
+Tstop = inf;
+tic
+count = 0;
+while toc < Tstop % Run for 20 seconds
+    audioIn = step(handles.AR);
+    % audioOut = step(NotchFilter,audioIn);
+    % put in while loop
+[y, err] = step(nlms,audioIn',audioIn',mu,a);
 
 subplot(2,1,1);
 plot(d);
@@ -160,17 +169,7 @@ subplot(2,1,2);
 plot(err);
 title('Signal');
 drawnow
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Streaming %
-TS = dsp.TimeScope('YLimits',[-0.1,0.1],'SampleRate',handles.Fs,...
-    'TimeSpan',44100/1024);
-Tstop = inf;
-tic
-count = 0;
-while toc < Tstop % Run for 20 seconds
-    audioIn = step(handles.AR);
-    audioOut = step(NotchFilter,audioIn);
-    step(TS,audioOut);
+   % step(TS,audioOut);
     count = count + 1;
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -210,10 +209,13 @@ hfig = figure;
 figname = hfig.Name;
 hfig.Name = 'My Window';
 
-function NotchFilter
+function Filter
 % Notch Filter %
 Wo = 200/(handles.Fs/2);
 Q  = 35;
 BW = Wo/Q;
 [b,a] = iirnotch(Wo,BW);
 NotchFilter = dsp.BiquadFilter('SOSMatrix',[b,a]);
+
+
+
