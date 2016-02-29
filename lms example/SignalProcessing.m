@@ -23,7 +23,7 @@ hErr = dsp.SignalSink;
     audio1 = step(noise);       % taking inputs and convert them into a 1024*2 double array
     audio2 = step(speech);
    
-    audio3 = 2*audio1 + audio2; % adding noise and speech signals together
+    audio3 = audio1 + audio2; % adding noise and speech signals together
     step(hmfw, audio3);         % write into a wav file
 
 %    drawnow
@@ -33,12 +33,11 @@ hErr = dsp.SignalSink;
 %	     ,nUnderrun);
 %    end
 
-
    [y(:,1), err(:,1)] = step(lms2,audio1(:,1),audio3(:,1),mu,a);
    [y(:,2), err(:,2)] = step(lms2,audio1(:,2),audio3(:,2),mu,a);
    
-   subplot(2,1,1), plot(audio3), title('noise + signal');
-   subplot(2,1,2),plot(err), title('Err');
+   subplot(2,1,1), plot(audio1),axis([0 1024 -1 1]), title('noise + signal');
+   subplot(2,1,2),plot(err),axis([0 1024 -1 1]), title('Err');
    drawnow
    nUnderrun = step(AP,err);
    step(hmfw1, err);         % write into a wav file
