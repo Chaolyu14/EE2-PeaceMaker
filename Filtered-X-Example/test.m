@@ -27,15 +27,10 @@ dS = step(Hfir,s) + ... % random signal propagated through secondary path
 M = 250;
 muS = 0.1;
 hNLMS = dsp.LMSFilter('Method','Normalized LMS','StepSize', muS,...
-    'Length', M);
+    'Length', M);   
 [yS,eS,Hhat] = step(hNLMS,s,dS);
 
-n = 1:ntrS;
-plot(n,dS,n,yS,n,eS);
-xlabel('Number of iterations');
-ylabel('Signal value');
-title('Secondary Identification Using the NLMS Adaptive Filter');
-legend('Desired Signal','Output Signal','Error Signal');
+
 
 delayW = 15;
 Flow   = 200; % Lower band-edge: 200 Hz
